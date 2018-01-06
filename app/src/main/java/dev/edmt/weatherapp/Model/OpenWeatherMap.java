@@ -6,7 +6,7 @@ public class OpenWeatherMap {
     private Coord coord;
     private List<Weather> weather;
     private String base;
-    private  Main main;
+    private Main main;
     private Wind wind;
     private Rain rain;
     private Clouds clouds;

@@ -10,6 +10,7 @@ import java.util.Date;
 public class Common {
     public static String API_KEY = "fa59f93d653da74f7d70b4c420ec2adf";
     public static String API_LINK = "http://api.openweathermap.org/data/2.5/weather";
+    public static String API_LINK_FORECAST = "http://api.openweathermap.org/data/2.5/forecast";
 
     @NonNull
     public static String apiRequest(String lat, String lng){
@@ -20,7 +21,12 @@ public class Common {
 
     public static String apiRequestByCityName(String cityName){
         StringBuilder sb = new StringBuilder(API_LINK);
-        Log.e("Create URL", cityName);
+        sb.append(String.format("?q=%s&APPID=%s&units=metric", cityName, API_KEY));
+        return sb.toString();
+    }
+
+    public static String apiRequestForecastByCityName(String cityName) {
+        StringBuilder sb = new StringBuilder(API_LINK_FORECAST);
         sb.append(String.format("?q=%s&APPID=%s&units=metric",cityName,API_KEY));
         return sb.toString();
     }

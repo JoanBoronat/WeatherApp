@@ -19,9 +19,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.SearchView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,14 +33,18 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 import com.squareup.picasso.Picasso;
 
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Objects;
 
 import dev.edmt.weatherapp.Common.Common;
 import dev.edmt.weatherapp.Common.RESTClient;
+import dev.edmt.weatherapp.Model.ListOWM;
 import dev.edmt.weatherapp.Model.OpenWeatherMap;
 
 
@@ -45,12 +52,12 @@ public class MainActivity extends AppCompatActivity {
 
     TextView txtLastUpdate, txtDescription, txtHumidity, txtSunrise, txtSunset, txtCelsius, txtMinTmp, txtMaxTmp;
     ImageView imageView;
-    SearchView searchView;
 
     String last_city;
 
     static double lat, lng;
     OpenWeatherMap openWeatherMap = new OpenWeatherMap();
+    ListOWM listOWM = new ListOWM();
     FusedLocationProviderClient mFusedLocationClient;
 
     int MY_PERMISSION = 0;
@@ -72,7 +79,6 @@ public class MainActivity extends AppCompatActivity {
         imageView = (ImageView) findViewById(R.id.imageView);
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
         Context context = getApplicationContext();
         SharedPreferences sharedPref = context.getSharedPreferences(
                 getString(R.string.preference_file_key), Context.MODE_PRIVATE);
@@ -125,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
                 String result = input.getText().toString();
                 if (!result.isEmpty()) {
                     new GetWeather().execute(Common.apiRequestByCityName(result));
+                    new GetWeather().execute(Common.apiRequestForecastByCityName(result));
                     saveLocation(result);
                 }
             }
@@ -207,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
         protected String doInBackground(String... params) {
             String stream = null;
             String urlString = params[0];
-            Log.e("doInBackground", urlString);
+
             RESTClient http = new RESTClient();
             stream = http.getHTTPData(urlString);
             return stream;
@@ -216,36 +223,107 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String s) {
             super.onPostExecute(s);
-            Log.e("onPostExecute", s);
+
+            Gson gson = new Gson();
+
             if (s.contains("error")) {
                 Log.e("onPostExecute", "city not found");
                 pd.dismiss();
                 return;
             }
 
-            Gson gson = new Gson();
-            Type mType = new TypeToken<OpenWeatherMap>() {
-            }.getType();
-            openWeatherMap = gson.fromJson(s, mType);
-            pd.dismiss();
+            if (s.contains("list")) {
 
-            saveLocation(openWeatherMap.getName());
+                ListView listView = (ListView) findViewById(R.id.listView);
+                CustomList customAdapter = new CustomList();
 
-            getSupportActionBar().setTitle(String.format("%s, %s", openWeatherMap.getName(), openWeatherMap.getSys().getCountry()));
+                Type mType = new TypeToken<ListOWM>() {
+                }.getType();
 
-            txtLastUpdate.setText(String.format("Last update: %s", Common.getDateNow()));
-            txtDescription.setText(String.format("%s", openWeatherMap.getWeather().get(0).getDescription().substring(0, 1).toUpperCase() + openWeatherMap.getWeather().get(0).getDescription().substring(1)));
-            txtHumidity.setText(String.format("Humidity %d%%", openWeatherMap.getMain().getHumidity()));
-            txtSunrise.setText(String.format("Sunrise %s", Common.unixTimeStampToDateTime(openWeatherMap.getSys().getSunrise())));
-            txtSunset.setText(String.format("Sunset %s", Common.unixTimeStampToDateTime(openWeatherMap.getSys().getSunset())));
-            txtCelsius.setText(String.format("%d °C", ((Double) openWeatherMap.getMain().getTemp()).intValue()));
-            txtMinTmp.setText(String.format("Min %d °C", ((Double) openWeatherMap.getMain().getTemp_min()).intValue()));
-            txtMaxTmp.setText(String.format("Max %d °C", ((Double) openWeatherMap.getMain().getTemp_max()).intValue()));
-            Picasso.with(MainActivity.this)
-                    .load(Common.getImage(openWeatherMap.getWeather().get(0).getIcon()))
-                    .into(imageView);
+                try {
+                    listOWM = gson.fromJson(s, mType);
+                } catch (JsonParseException e) {
+                    Log.e("JSON", e.getMessage());
+                }
 
+                listView.setAdapter(customAdapter);
+
+                pd.dismiss();
+
+            } else {
+
+                Type mType = new TypeToken<OpenWeatherMap>() {
+                }.getType();
+
+                openWeatherMap = gson.fromJson(s, mType);
+                pd.dismiss();
+
+                saveLocation(openWeatherMap.getName());
+
+                getSupportActionBar().setTitle(String.format("%s, %s", openWeatherMap.getName(), openWeatherMap.getSys().getCountry()));
+
+                txtLastUpdate.setText(String.format("Last update: %s", Common.getDateNow()));
+                txtDescription.setText(String.format("%s", openWeatherMap.getWeather().get(0).getDescription().substring(0, 1).toUpperCase() + openWeatherMap.getWeather().get(0).getDescription().substring(1)));
+                txtHumidity.setText(String.format("Humidity %d%%", openWeatherMap.getMain().getHumidity()));
+                txtSunrise.setText(String.format("Sunrise %s", Common.unixTimeStampToDateTime(openWeatherMap.getSys().getSunrise())));
+                txtSunset.setText(String.format("Sunset %s", Common.unixTimeStampToDateTime(openWeatherMap.getSys().getSunset())));
+                txtCelsius.setText(String.format("%d °C", ((Double) openWeatherMap.getMain().getTemp()).intValue()));
+                txtMinTmp.setText(String.format("Min %d °C", ((Double) openWeatherMap.getMain().getTemp_min()).intValue()));
+                txtMaxTmp.setText(String.format("Max %d °C", ((Double) openWeatherMap.getMain().getTemp_max()).intValue()));
+                Picasso.with(MainActivity.this)
+                        .load(Common.getImage(openWeatherMap.getWeather().get(0).getIcon()))
+                        .into(imageView);
+
+                new GetWeather().execute(Common.apiRequestForecastByCityName(last_city));
+
+            }
         }
 
+    }
+
+    class CustomList extends BaseAdapter {
+        @Override
+        public int getCount() {
+            return listOWM.getCnt();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return null;
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            convertView = getLayoutInflater().inflate(R.layout.list_elem, null);
+
+            TextView txtDescription, txtCelsius, txtMinTmp, txtMaxTmp, txtDate;
+            ImageView imageView;
+
+            txtDescription = (TextView) convertView.findViewById(R.id.txtDescription);
+            txtDate = (TextView) convertView.findViewById(R.id.txtDate);
+            txtCelsius = (TextView) convertView.findViewById(R.id.txtCelsius);
+            txtMinTmp = (TextView) convertView.findViewById(R.id.txtMinTmp);
+            txtMaxTmp = (TextView) convertView.findViewById(R.id.txtMaxTmp);
+            imageView = (ImageView) convertView.findViewById(R.id.imageView);
+
+            SimpleDateFormat formatter = new SimpleDateFormat("EEEE, MMMM d, yyyy HH:mm");
+            String dateString = formatter.format(new Date(listOWM.getList().get(position).getDt() * 1000L));
+
+            txtDate.setText(String.format("%s", dateString));
+            txtDescription.setText(String.format("%s", listOWM.getList().get(position).getWeather().get(0).getDescription().substring(0, 1).toUpperCase() + listOWM.getList().get(position).getWeather().get(0).getDescription().substring(1)));
+            txtCelsius.setText(String.format("%d °C", ((Double) listOWM.getList().get(position).getMain().getTemp()).intValue()));
+            txtMinTmp.setText(String.format("Min %d °C", ((Double) listOWM.getList().get(position).getMain().getTemp_min()).intValue()));
+            txtMaxTmp.setText(String.format("Max %d °C", ((Double) listOWM.getList().get(position).getMain().getTemp_max()).intValue()));
+            Picasso.with(MainActivity.this)
+                    .load(Common.getImage(listOWM.getList().get(position).getWeather().get(0).getIcon()))
+                    .into(imageView);
+
+            return convertView;
+        }
     }
 }
