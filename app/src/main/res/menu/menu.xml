@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:context=".MainActivity">
+
+    <item
+        android:id="@+id/action_refresh"
+        android:icon="@drawable/ic_refresh_white_24dp"
+        app:showAsAction="ifRoom"
+        android:title="@string/menu_refesh" />
+    <item
+        android:id="@+id/action_search_city"
+        android:icon="@drawable/ic_magnify_white_24dp"
+        app:showAsAction="ifRoom|collapseActionView"
+        app:actionViewClass="com.actionbarsherlock.widget.SearchView"
+        android:title="@string/menu_search_city" />
+    <item
+        android:id="@+id/action_get_current_location"
+        android:icon="@drawable/ic_map_white_24dp"
+        app:showAsAction="ifRoom"
+        android:title="@string/menu_get_current_location" />
+</menu>

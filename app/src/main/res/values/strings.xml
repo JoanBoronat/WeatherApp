@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">WeatherApp</string>
+    <string name="preference_file_key">preferences_weatherapp</string>
+    <string name="last_city_pref">last_city</string>
+    <string name="default_city">new york</string>
+
+    <string name="menu_refesh">Refresh</string>
+    <string name="menu_search_city">Search city</string>
+    <string name="menu_get_current_location">Get current location</string>
+
+    <string name="search_title">Search location</string>
+    <string name="dialog_ok">Search</string>
+    <string name="dialog_cancel">Cancel</string>
+
+</resources>
