@@ -11,5 +11,9 @@
     <string name="search_title">Search location</string>
     <string name="dialog_ok">Search</string>
     <string name="dialog_cancel">Cancel</string>
+    <string name="menu_custom_sensors">My weather station</string>
+    <string name="device_credentials">Connect with your weather stations</string>
+    <string name="device_mac">device_mac</string>
+    <string name="device_pass">device_pass</string>
 
 </resources>
